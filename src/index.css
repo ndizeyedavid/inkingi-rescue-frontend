@@ -1,0 +1,5 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+    themes: caramellatte --default, luxury --prefersdark, garden, cupcake, autumn, sunset,
+        lofi, synthwave, retro;
+}
