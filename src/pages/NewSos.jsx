@@ -1,23 +1,51 @@
 import { ChevronLeft, Camera, Upload, X } from "lucide-react"
 import BottomNav from "../components/BottomNav"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useForm } from "react-hook-form"
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import Webcam from "react-webcam"
+import { createSosReport } from "../services/sosService";
+import { getCurrentUser } from "../services/authService"
 
 function NewSos() {
      const { register, handleSubmit, formState: { errors } } = useForm();
      const [proofs, setProofs] = useState([]);
      const [showCamera, setShowCamera] = useState(false);
      const webcamRef = useRef(null);
+     const navigate = useNavigate();
+     const [loading, setLoading] = useState(false);
+     const [location, setLocation] = useState(null);
 
-     const onSubmit = (data) => {
-          const formData = {
-               ...data,
-               proofs
-          };
-          console.log(formData);
-          // Handle form submission
+     useEffect(() => {
+          if (navigator.geolocation) {
+               navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                         setLocation([pos.coords.latitude, pos.coords.longitude]);
+                    },
+                    (err) => {
+                         setLocation(null);
+                    }
+               );
+          }
+     }, []);
+
+     const onSubmit = async (data) => {
+          try {
+               setLoading(true);
+               const formData = {
+                    ...data,
+                    proofs,
+                    location,
+                    user: getCurrentUser()._id
+               };
+
+               await createSosReport(formData);
+               navigate('/sos/reports');
+          } catch (error) {
+               console.error("Error creating SOS report:", error);
+          } finally {
+               setLoading(false);
+          }
      };
 
      const handleFileUpload = (e) => {

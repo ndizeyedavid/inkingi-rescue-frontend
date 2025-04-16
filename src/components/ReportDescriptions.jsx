@@ -1,5 +1,11 @@
 
-import { BadgeAlert, Clock, Flag, MapPin, MessageSquare, Phone, Send, ThumbsUp, User } from 'lucide-react';
+import { BadgeAlert, Clock, Flag, MapPin, MessageSquare, Phone, Send, ThumbsUp, User, X } from 'lucide-react';
+import { useForm } from 'react-hook-form';
+import { getCurrentUser } from '../services/authService';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import Axios from '../services/axios';
+import { Link } from 'react-router-dom';
 
 export default function ReportDescriptions({
      id,
@@ -10,10 +16,34 @@ export default function ReportDescriptions({
      phone,
      date,
      location,
+     coordinates,
      proof,
      volunteers,
-     comments
+     comments,
+     setComments
 }) {
+     const [loading, setLoading] = useState(false);
+
+     const { register, handleSubmit, reset } = useForm();
+
+     async function sendComment(data) {
+          try {
+               const formData = {
+                    user: getCurrentUser()._id,
+                    comment: data.comment
+               }
+               await Axios.post("/sos/comment/" + id, formData)
+               toast.success("Comment posted successfully")
+               setComments(Math.random())
+          } catch (err) {
+               toast.error(err.response?.data?.message || "Failed to send comment")
+               console.error(err.response);
+          } finally {
+               setLoading(false);
+               reset();
+          }
+     }
+
      return (
           <>
                <input type="checkbox" id={`modal_desc_` + id} className="modal-toggle" />
@@ -48,7 +78,7 @@ export default function ReportDescriptions({
                          </div>
 
                          {/* Time and Location */}
-                         <div className="flex space-x-4 mb-4 text-sm text-gray-500">
+                         <div className="flex flex-wrap gap-1 space-x-4 mb-4 text-sm text-gray-500">
                               <div className="flex items-center">
                                    <Clock className="w-4 h-4 mr-1" />
                                    {date}
@@ -72,10 +102,10 @@ export default function ReportDescriptions({
                                         <div key={index} className="rounded-lg bg-base-200 h-40 flex items-center justify-center">
                                              {item.endsWith('.mp4') ? (
                                                   <video className="h-full w-full object-cover rounded-lg" controls>
-                                                       <source src={item} type="video/mp4" />
+                                                       <source src={import.meta.env.VITE_BACKEND + item} type="video/mp4" />
                                                   </video>
                                              ) : (
-                                                  <img src={item} alt="Proof" className="h-full w-full object-cover rounded-lg" />
+                                                  <img src={import.meta.env.VITE_BACKEND + item} alt="Proof" className="h-full w-full object-cover rounded-lg" />
                                              )}
                                         </div>
                                    ))}
@@ -89,7 +119,7 @@ export default function ReportDescriptions({
                                    {volunteers.map((volunteer, index) => (
                                         <div key={index} className="badge badge-outline gap-2">
                                              <ThumbsUp className="w-3 h-3" />
-                                             {volunteer}
+                                             {volunteer.user.fname}
                                         </div>
                                    ))}
                               </div>
@@ -97,41 +127,33 @@ export default function ReportDescriptions({
 
                          {/* Comments Section */}
                          <div className="mb-6">
-                              <h4 className="font-semibold mb-2">Comments</h4>
+                              <h4 className="font-semibold mb-2">Comments({comments.length})</h4>
                               <div className="space-y-4">
                                    {comments.map((comment, index) => (
                                         <div key={index} className="bg-base-200 p-3 rounded-lg">
                                              <div className="flex justify-between mb-2">
-                                                  <span className="font-medium">{comment.user}</span>
-                                                  <span className="text-sm text-gray-500">{comment.time}</span>
+                                                  <span className="font-medium">{comment.user?.fname + " " + comment.user?.lname}</span>
+                                                  <span className="text-sm text-gray-500">{new Date(comment.postDate).toLocaleString()}</span>
                                              </div>
-                                             <p className="text-sm">{comment.text}</p>
+                                             <p className="text-sm">{comment.comment}</p>
                                         </div>
                                    ))}
                               </div>
                          </div>
 
                          {/* Comment Form */}
-                         <div className="form-control">
+                         <form onSubmit={handleSubmit(sendComment)} className="form-control">
                               <div className="join w-full">
-                                   <input type="text" placeholder="Write a comment..." className="input input-bordered w-full join-item" />
-                                   <button className="btn btn-square join-item">
-                                        <Send className="w-5 h-5" />
+                                   <input type="text" placeholder="Write a comment..." className="input input-bordered w-full join-item" required {...register("comment")} />
+                                   <button disabled={loading} type='submit' className="btn btn-square join-item">
+                                        {loading ? <span className='loading loading-spinner'></span> : <Send className="w-5 h-5" />}
                                    </button>
                               </div>
-                         </div>
+                         </form>
 
                          {/* Action Buttons */}
                          <div className="modal-action">
-                              <button className="btn btn-error gap-2">
-                                   <Flag className="w-4 h-4" />
-                                   Report Scam
-                              </button>
-                              <button className="btn btn-primary gap-2">
-                                   <MessageSquare className="w-4 h-4" />
-                                   Volunteer
-                              </button>
-                              <button className="btn">Map</button>
+                              <Link to={`/map?lat=${coordinates.split(',')[0]}&long=${coordinates.split(',')[1]}`} className="btn btn-block mt-2"><MapPin className='size-4' /> Map</Link>
                          </div>
                     </div>
                </div>

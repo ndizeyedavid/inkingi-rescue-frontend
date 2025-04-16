@@ -1,16 +1,107 @@
 
 import { BadgeAlert, Clock, MapPin, Phone, User } from 'lucide-react';
 import ReportDescriptions from './ReportDescriptions';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import Axios from '../services/axios';
+import { getCurrentUser } from '../services/authService';
+import { toast } from 'sonner';
 
 export default function SingleReport({
+     data,
      emergencyType,
      status,
      date,
      location,
      reporter,
      phone,
-     isVolunteered
+     isVolunteered,
+     setReports
 }) {
+
+     const [address, setAddress] = useState("");
+     const [loading, setLoading] = useState(true);
+     const [volLoading, setVolLoading] = useState(false);
+
+     useEffect(() => {
+          async function fetchAddress() {
+               if (location) {
+                    setLoading(true);
+                    const coordinates = location.split(",");
+
+                    // Check cache first
+                    const cacheKey = `geocode_${location}`;
+                    const cachedResult = localStorage.getItem(cacheKey);
+                    const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+                    const cacheIsValid = cacheTimestamp &&
+                         (Date.now() - parseInt(cacheTimestamp) < 24 * 60 * 60 * 1000); // 24 hours
+
+                    if (cachedResult && cacheIsValid) {
+                         setAddress(cachedResult);
+                         setLoading(false);
+                         return;
+                    }
+
+                    try {
+                         const { data } = await axios.get(
+                              "https://nominatim.openstreetmap.org/reverse",
+                              {
+                                   params: {
+                                        format: "json",
+                                        lat: coordinates[0],
+                                        lon: coordinates[1],
+                                   },
+                              }
+                         );
+                         let formattedAddress = "";
+                         if (data.address) {
+                              const { road, suburb, city, town, village, state, country } = data.address;
+                              formattedAddress = [
+                                   road,
+                                   suburb,
+                                   city || town || village,
+                                   state,
+                                   country,
+                              ]
+                                   .filter(Boolean)
+                                   .join(", ");
+                         }
+                         if (!formattedAddress && data.display_name) {
+                              formattedAddress = data.display_name;
+                         }
+
+                         // Cache the result
+                         localStorage.setItem(cacheKey, formattedAddress);
+                         localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
+
+                         setAddress(formattedAddress);
+                    } catch (error) {
+                         setAddress("Location not available");
+                    } finally {
+                         setLoading(false);
+                    }
+               } else {
+                    setAddress("Location not available");
+                    setLoading(false);
+               }
+          }
+          fetchAddress();
+     }, [location]);
+
+     async function handleVolunteer() {
+          setVolLoading(true);
+          try {
+               await Axios.post(`/sos/${isVolunteered ? "unvolunteer" : "volunteer"}/${data._id}`, { user: getCurrentUser()._id });
+               setReports(Math.random())
+               toast.success(`${isVolunteered ? "Unvolunteered" : "Volunteered"} successfully`);
+          } catch (err) {
+               toast.error(`Failed to ${isVolunteered ? "unvolunteer" : "volunteer"}`);
+               console.error(`Failed to ${isVolunteered ? "unvolunteer" : "volunteer"}`, err)
+          } finally {
+               setVolLoading(false);
+          }
+     }
+
      return (
           <>
                <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
@@ -18,9 +109,9 @@ export default function SingleReport({
                     <div className="flex justify-between items-center">
                          <div className="flex items-center space-x-2">
                               <BadgeAlert className="w-5 h-5 text-red-500" />
-                              <span className="font-semibold text-gray-800">{emergencyType}</span>
+                              <span className="font-semibold text-gray-800 capitalize">{emergencyType}</span>
                          </div>
-                         <div className={`px-3 py-1 rounded-full text-sm ${status === "Active"
+                         <div className={`px-3 py-1 rounded-full text-sm ${status === "occuring"
                               ? "bg-red-100 text-red-600"
                               : "bg-green-100 text-green-600"
                               }`}>
@@ -36,7 +127,13 @@ export default function SingleReport({
                          </div>
                          <div className="flex items-center space-x-2 text-gray-600">
                               <MapPin className="w-4 h-4" />
-                              <span className="text-sm">{location}</span>
+                              <span className="text-sm">
+                                   {loading ? (
+                                        <span className="loading loading-spinner loading-xs mr-2"></span>
+                                   ) : (
+                                        address
+                                   )}
+                              </span>
                          </div>
                     </div>
 
@@ -58,34 +155,38 @@ export default function SingleReport({
 
                     {/* Action Button */}
                     <button
+                         onClick={handleVolunteer}
+                         disabled={volLoading}
                          className={`w-full py-2.5 rounded-lg font-medium transition-colors ${isVolunteered
                               ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
                               : "bg-red-500 text-white hover:bg-red-600"
                               }`}
                     >
-                         {isVolunteered ? "Unvolunteer" : "Volunteer to Help"}
+                         {volLoading ? "Loading..." : isVolunteered ? "Unvolunteer" : "Volunteer to Help"}
                     </button>
                     {/* <label className="btn btn-block py-2.5 rounded-lg font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"> */}
-                    <label htmlFor="modal_desc_123" className="btn btn-base-100 btn-block  rounded-lg">
+                    <label htmlFor={"modal_desc_" + data._id} className="btn btn-base-100 btn-block  rounded-lg">
                          Details
                     </label>
                </div>
 
                <ReportDescriptions
-                    id="123"
-                    title="Medical Emergency"
-                    type="Medical"
-                    description="Need immediate assistance..."
-                    reporter="John Doe"
-                    phone="+250 788 123 456"
-                    date="2024-01-20 14:30"
-                    location="Kigali, Rwanda"
-                    proof={["image1.jpg", "video1.mp4"]}
-                    volunteers={["Jane Doe", "Mike Smith"]}
-                    comments={[
-                         { user: "Helper 1", text: "I'm nearby!", time: "2 min ago" }
-                    ]}
+                    id={data._id}
+                    title={data.title}
+                    type={data.sos_type}
+                    description={data.description}
+                    reporter={data.user?.fname + " " + data.user?.lname}
+                    phone={data.user?.phone}
+                    date={data.postDate ? new Date(data.postDate).toDateString() : ""}
+                    location={address}
+                    coordinates={data.location}
+                    proof={data.proof}
+                    volunteers={data.volunteers || []}
+                    // volunteers={console.log(data.volunteers) || []}
+                    comments={data.comments}
+                    setComments={setReports}
                />
           </>
      )
+
 }

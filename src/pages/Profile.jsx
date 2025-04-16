@@ -1,8 +1,16 @@
 import { Link } from "react-router-dom"
 import BottomNav from "../components/BottomNav"
-import { UserCircleIcon, Users, ShieldCheckIcon, BellIcon, PhoneIcon, KeyIcon, ChevronRightIcon, Palette, LogOut } from "lucide-react"
+import { UserCircleIcon, Users, ShieldCheckIcon, ChevronRightIcon, Palette, LogOut } from "lucide-react"
+import { getCurrentUser, logoutUser } from "../services/authService"
 
 function Profile() {
+
+     function handleLogout() {
+          if (confirm("Are you sure you want to log out?")) {
+               logoutUser();
+          }
+     }
+
      const settingsGroups = [
           {
                title: "Account",
@@ -20,17 +28,25 @@ function Profile() {
           }
      ]
 
+     const userInfo = getCurrentUser();
+
      return (
           <div className="pb-24">
                {/* Header */}
-               <div className="bg-gray-50 p-6 h-[150px] rounded-[0_0_30px_30px] flex items-center space-x-4">
-                    <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                         <UserCircleIcon className="w-12 h-12 text-gray-400" />
+               <div className="bg-gray-50 p-6 h-[150px] flex items-center justify-between rounded-[0_0_30px_30px] shadow">
+                    <div className="flex items-center space-x-2">
+                         <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
+                              <UserCircleIcon className="w-12 h-12 text-gray-400" />
+                         </div>
+                         <div>
+                              <h2 className="text-xl font-semibold">{userInfo?.fname + " " + userInfo?.lname}</h2>
+                              <p className="text-gray-500">{userInfo?.phone}</p>
+                         </div>
                     </div>
-                    <div>
-                         <h2 className="text-xl font-semibold">John Doe</h2>
-                         <p className="text-gray-500">+250 788 123 456</p>
-                    </div>
+                    <button onClick={handleLogout} className="flex items-center btn btn-outline btn-danger">
+                         <LogOut className="w-6 h-6" />
+                         <span>Log Out</span>
+                    </button>
                </div>
 
                {/* Settings Groups */}
@@ -57,6 +73,7 @@ function Profile() {
                               </div>
                          </div>
                     ))}
+
                </div>
 
                <BottomNav />

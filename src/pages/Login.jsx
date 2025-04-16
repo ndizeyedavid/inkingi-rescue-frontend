@@ -1,20 +1,28 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { loginUser } from '../services/authService';
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 function Login() {
+     const navigate = useNavigate();
+     const [loading, setLoading] = useState(false);
 
-     const [loading, setLoaidng] = useState(false);
-
-     const { register, handleSubmit, reset } = useForm();
+     const {
+          register,
+          handleSubmit,
+          formState: { errors }
+     } = useForm();
 
      async function login(data) {
-          setLoaidng(true);
-          const act = await loginUser(data)
-
-          console.log(act)
-          // setLoaidng(false);
+          try {
+               setLoading(true);
+               await loginUser(data);
+               navigate('/');
+          } catch (error) {
+               console.error(error);
+          } finally {
+               setLoading(false);
+          }
      }
 
      return (
@@ -31,22 +39,55 @@ function Login() {
 
                     <form onSubmit={handleSubmit(login)} className="flex flex-col gap-7">
                          <label className="floating-label">
-                              <input type="text" placeholder="Email" className="input input-lg outline-none focus:border-none w-full" {...register("email")} />
+                              <input
+                                   type="text"
+                                   placeholder="Email"
+                                   className={`input input-lg outline-none focus:border-none w-full ${errors.email ? 'input-error' : ''}`}
+                                   {...register("email", {
+                                        required: "Email is required",
+                                   })}
+                              />
                               <span>Email</span>
+                              {errors.email && (
+                                   <p className="text-error text-sm mt-1">{errors.email.message}</p>
+                              )}
                          </label>
+
                          <label className="floating-label">
-                              <input type="password" placeholder="Password" className="input input-lg outline-none focus:border-none w-full" {...register("password")} />
+                              <input
+                                   type="password"
+                                   placeholder="Password"
+                                   className={`input input-lg outline-none focus:border-none w-full ${errors.password ? 'input-error' : ''}`}
+                                   {...register("password", {
+                                        required: "Password is required",
+                                   })}
+                              />
                               <span>Password</span>
+                              {errors.password && (
+                                   <p className="text-error text-sm mt-1">{errors.password.message}</p>
+                              )}
                          </label>
+
                          <div className="text-right relative bottom-3">
-                              <Link to="/forget-password" className="w-fit text-[#e6491e] pb-[0.5px] border-b">Forgot Password?</Link>
+                              <Link to="/forget-password" className="w-fit text-[#e6491e] pb-[0.5px] border-b">
+                                   Forgot Password?
+                              </Link>
                          </div>
 
-                         <button type="submit" disabled={loading} className="btn btn-neutral btn-block text-xl relative bottom-2">
+                         <button
+                              type="submit"
+                              disabled={loading}
+                              className="btn btn-neutral btn-block text-xl relative bottom-2"
+                         >
                               {loading ? <span className="loading loading-spinner"></span> : "Login"}
                          </button>
 
-                         <span className="text-center relative top-3">Don't have an account? <Link to="/signup" className="w-fit text-[#e6491e] pb-[0.5px] border-b">Signup</Link></span>
+                         <span className="text-center relative top-3">
+                              Don't have an account?
+                              <Link to="/signup" className="w-fit text-[#e6491e] pb-[0.5px] border-b">
+                                   Signup
+                              </Link>
+                         </span>
                     </form>
                </div>
           </main>

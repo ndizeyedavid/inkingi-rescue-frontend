@@ -15,10 +15,10 @@ export default function EmergencyContactCard({ contact }) {
                <div className="card-body p-4">
                     <div className="flex items-center justify-between">
                          <div>
-                              <h3 className="text-lg font-semibold flex items-center gap-2">
+                              <h3 className="text-lg font-semibold flex items-center gap-2 capitalize">
                                    {contact.name}
                               </h3>
-                              <p className="text-sm text-gray-500">{contact.relation}</p>
+                              <p className="text-sm text-gray-500 capitalize">{contact.relationship}</p>
                               <p className="text-sm font-medium mt-1">{contact.phone}</p>
                          </div>
 
