@@ -3,7 +3,23 @@ import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 
 function ThemePage() {
-     const [currentTheme, setCurrentTheme] = useState('light');
+     const [currentTheme, setCurrentTheme] = useState(() => {
+          return localStorage.getItem('theme') || 'caramellatte';
+     });
+
+     useEffect(() => {
+          const savedTheme = localStorage.getItem('theme');
+          if (savedTheme) {
+               setCurrentTheme(savedTheme);
+               document.documentElement.setAttribute('data-theme', savedTheme);
+          }
+     }, []);
+
+     const handleThemeChange = (themeId) => {
+          setCurrentTheme(themeId);
+          localStorage.setItem('theme', themeId);
+          document.documentElement.setAttribute('data-theme', themeId);
+     };
 
      const themes = [
           { id: 'caramellatte', name: 'Default', icon: Sun },
@@ -16,11 +32,6 @@ function ThemePage() {
           { id: 'cupcake', name: 'Cupcake', icon: CakeSlice },
           { id: 'garden', name: 'garden', icon: Flower2 },
      ];
-
-     const handleThemeChange = (themeId) => {
-          setCurrentTheme(themeId);
-          document.documentElement.setAttribute('data-theme', themeId);
-     };
 
      return (
           <>

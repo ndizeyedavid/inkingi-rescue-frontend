@@ -1,14 +1,63 @@
-import { ChevronLeft, Upload } from "lucide-react"
-import { useState } from "react"
-import { Link } from "react-router-dom";
+import { ChevronLeft } from "lucide-react"
+import { useEffect, useState } from "react"
+import { Link, useNavigate } from "react-router-dom";
+import { getCurrentUser, updateProfile } from "../services/authService";
+import { Districts } from "rwanda";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import axios from "axios";
 
 function PersonalSettings() {
-     const [profileImage, setProfileImage] = useState(null);
+     const navigate = useNavigate();
+     const [loading, setLoading] = useState(false);
+     const [address, setAddress] = useState([]);
+     const { register, handleSubmit, setValue } = useForm();
 
-     const handleImageChange = (e) => {
-          const file = e.target.files[0];
-          if (file) {
-               setProfileImage(URL.createObjectURL(file));
+     useEffect(() => {
+          const user = getCurrentUser();
+          if (user) {
+               setValue("fname", user.fname);
+               setValue("lname", user.lname);
+               setValue("phone", user.phone);
+               setValue("district", user.district);
+          }
+     }, [setValue]);
+
+     const onSubmit = async (data) => {
+          try {
+               setLoading(true);
+
+               const addressFetch = await axios.get(`https://nominatim.openstreetmap.org/search`, {
+                    params: {
+                         format: 'json',
+                         q: `${data.district}, Rwanda`,
+                         limit: 1
+                    }
+               });
+
+               if (!addressFetch.data || addressFetch.data.length === 0) {
+                    toast.error('Location not found. Please try a different district.');
+                    return;
+               }
+
+               const coordinates = [
+                    parseFloat(addressFetch.data[0].lat),
+                    parseFloat(addressFetch.data[0].lon)
+               ];
+
+               const userData = {
+                    ...data,
+                    address: coordinates
+               };
+
+               await updateProfile(userData);
+               toast.success("Profile updated successfully");
+               navigate('/profile');
+          } catch (error) {
+               console.error("Failed to update profile:", error);
+               toast.error("Failed to update profile. Please try again.");
+          } finally {
+               setLoading(false);
           }
      };
 
@@ -26,75 +75,67 @@ function PersonalSettings() {
                <div className="p-4 max-w-2xl mx-auto">
                     <div className="card bg-base-100 shadow-xl">
                          <div className="card-body">
-                              {/* Profile Picture Section */}
-                              <div className="flex flex-col items-center gap-4 mb-6">
-                                   <div className="avatar">
-                                        <div className="w-24 rounded-full ring ring-primary ring-offset-base-100 ring-offset-2">
-                                             <img src={profileImage || "https://upload.wikimedia.org/wikipedia/commons/8/89/Portrait_Placeholder.png"}
-                                                  alt="Profile" />
-                                        </div>
-                                   </div>
-                                   <label className="btn btn-outline btn-sm gap-2">
-                                        <Upload size={16} />
-                                        Change Photo
-                                        <input type="file" className="hidden" onChange={handleImageChange}
-                                             accept="image/*" />
-                                   </label>
-                              </div>
-
-                              {/* Personal Information Form */}
-                              <form className="space-y-4">
+                              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                                    <div className="grid md:grid-cols-2 gap-4">
-                                        {/* First Name */}
                                         <div className="form-control">
                                              <label className="label">
                                                   <span className="label-text">First Name</span>
                                              </label>
-                                             <input type="text" placeholder="Enter first name"
-                                                  className="input input-bordered" />
+                                             <input
+                                                  type="text"
+                                                  className="input input-bordered"
+                                                  {...register("fname", { required: "First name is required" })}
+                                             />
                                         </div>
 
-                                        {/* Last Name */}
                                         <div className="form-control">
                                              <label className="label">
                                                   <span className="label-text">Last Name</span>
                                              </label>
-                                             <input type="text" placeholder="Enter last name"
-                                                  className="input input-bordered" />
+                                             <input
+                                                  type="text"
+                                                  className="input input-bordered"
+                                                  {...register("lname", { required: "Last name is required" })}
+                                             />
                                         </div>
                                    </div>
 
-                                   {/* Email */}
-                                   <div className="form-control">
-                                        <label className="label">
-                                             <span className="label-text">Email Address</span>
-                                        </label>
-                                        <input type="email" placeholder="Enter email address"
-                                             className="input input-bordered" />
-                                   </div>
-
-                                   {/* Phone */}
                                    <div className="form-control">
                                         <label className="label">
                                              <span className="label-text">Phone Number</span>
                                         </label>
-                                        <input type="tel" placeholder="Enter phone number"
-                                             className="input input-bordered" />
+                                        <input
+                                             type="tel"
+                                             className="input input-bordered"
+                                             {...register("phone", { required: "Phone number is required" })}
+                                        />
                                    </div>
 
-                                   {/* Address */}
                                    <div className="form-control">
                                         <label className="label">
                                              <span className="label-text">Address</span>
                                         </label>
-                                        <textarea className="textarea textarea-bordered h-24"
-                                             placeholder="Enter your address"></textarea>
+                                        <select
+                                             className="select select-bordered"
+                                             {...register("district")}
+                                        >
+                                             {Districts().map((district, index) => (
+                                                  <option key={index} value={district}>{district}</option>
+                                             ))}
+                                        </select>
                                    </div>
 
-                                   {/* Submit Button */}
                                    <div className="mt-6">
-                                        <button type="submit" className="btn btn-primary w-full">
-                                             Save Changes
+                                        <button
+                                             type="submit"
+                                             className="btn btn-primary w-full"
+                                             disabled={loading}
+                                        >
+                                             {loading ? (
+                                                  <span className="loading loading-spinner"></span>
+                                             ) : (
+                                                  "Save Changes"
+                                             )}
                                         </button>
                                    </div>
                               </form>

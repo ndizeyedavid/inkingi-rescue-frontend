@@ -1,7 +1,34 @@
 import { ChevronLeft } from "lucide-react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
+import { useState } from "react"
+import { useForm } from "react-hook-form"
+import { addContact } from "../services/contactService"
+import PhoneInput from 'react-phone-number-input'
+import 'react-phone-number-input/style.css'
 
 function NewEmergencyContact() {
+     const navigate = useNavigate();
+     const [loading, setLoading] = useState(false);
+     const [phoneNumber, setPhoneNumber] = useState('');
+     const { register, handleSubmit, formState: { errors } } = useForm();
+
+     const onSubmit = async (data) => {
+          try {
+               setLoading(true);
+               const contactData = {
+                    ...data,
+                    phone: phoneNumber
+               };
+
+               await addContact(contactData);
+               navigate('/profile/contacts');
+          } catch (error) {
+               console.error('Error adding contact:', error);
+          } finally {
+               setLoading(false);
+          }
+     };
+
      return (
           <>
                <div className='flex items-center justify-between px-3 py-7 pt-8 bg-[#f6f0e8] text-black'>
@@ -16,8 +43,7 @@ function NewEmergencyContact() {
                <div className="p-4 max-w-xl mt-[20px] mx-auto">
                     <div className="bg-base-100">
                          <div className="card-body">
-                              <form className="space-y-8">
-                                   {/* Contact Name */}
+                              <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
                                    <div className="form-control">
                                         <label className="label">
                                              <span className="label-text">Contact Name</span>
@@ -26,33 +52,41 @@ function NewEmergencyContact() {
                                         <input
                                              type="text"
                                              placeholder="Enter contact name"
-                                             className="input input-bordered"
-                                             required
+                                             className={`input input-bordered ${errors.name ? 'input-error' : ''}`}
+                                             {...register("name", { required: "Contact name is required" })}
                                         />
+                                        {errors.name && (
+                                             <span className="text-error text-sm mt-1">{errors.name.message}</span>
+                                        )}
                                    </div>
 
-                                   {/* Phone Number */}
                                    <div className="form-control">
                                         <label className="label">
                                              <span className="label-text">Phone Number</span>
                                              <span className="label-text-alt text-error">*</span>
                                         </label>
-                                        <input
-                                             type="tel"
-                                             placeholder="e.g., +250 788 123 456"
-                                             className="input input-bordered"
-                                             required
+                                        <PhoneInput
+                                             international
+                                             defaultCountry="RW"
+                                             selected={phoneNumber}
+                                             onChange={setPhoneNumber}
+                                             className={`input input-bordered ${!phoneNumber ? 'input-error' : ''}`}
                                         />
+                                        {!phoneNumber && (
+                                             <span className="text-error text-sm mt-1">Phone number is required</span>
+                                        )}
                                    </div>
 
-                                   {/* Relationship */}
                                    <div className="form-control">
                                         <label className="label">
                                              <span className="label-text">Relationship</span>
                                              <span className="label-text-alt text-error">*</span>
                                         </label>
-                                        <select className="select select-bordered w-full" required>
-                                             <option value="" disabled selected>Select relationship</option>
+                                        <select
+                                             className={`select select-bordered w-full ${errors.relation ? 'select-error' : ''}`}
+                                             {...register("relationship", { required: "Relationship is required" })}
+                                        >
+                                             <option value="" disabled defaultValue>Select relationship</option>
                                              <option value="parent">Parent</option>
                                              <option value="sibling">Sibling</option>
                                              <option value="spouse">Spouse</option>
@@ -60,13 +94,22 @@ function NewEmergencyContact() {
                                              <option value="relative">Relative</option>
                                              <option value="other">Other</option>
                                         </select>
+                                        {errors.relation && (
+                                             <span className="text-error text-sm mt-1">{errors.relation.message}</span>
+                                        )}
                                    </div>
 
-
-                                   {/* Submit Buttons */}
                                    <div className="flex gap-3 pt-4">
-                                        <button type="submit" className="btn btn-primary flex-1">
-                                             Save Contact
+                                        <button
+                                             type="submit"
+                                             className="btn btn-primary flex-1"
+                                             disabled={loading || !phoneNumber}
+                                        >
+                                             {loading ? (
+                                                  <span className="loading loading-spinner"></span>
+                                             ) : (
+                                                  "Save Contact"
+                                             )}
                                         </button>
                                    </div>
                               </form>

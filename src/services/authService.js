@@ -5,12 +5,14 @@ import { toast } from "sonner";
 export const loginUser = async (credentials) => {
     try {
         const response = await Axios.post("/users/auth/login", credentials);
-        if (response.data.token) {
-            localStorage.setItem("token", response.data.token);
-            localStorage.setItem("user", JSON.stringify(response.data.user));
+        const data = response.data;
+        if (data.data.token) {
+            localStorage.setItem("token", data.data.token);
+            localStorage.setItem("user", JSON.stringify(data.data));
             toast.success("Welcome back!");
-            return response.data;
+            return data.data;
         }
+        throw new Error("Login failed. Please try again.");
     } catch (error) {
         const message =
             error.response?.data?.message || "Login failed. Please try again.";
@@ -22,9 +24,14 @@ export const loginUser = async (credentials) => {
 // Register user
 export const registerUser = async (userData) => {
     try {
-        const response = await Axios.post("/auth/register", userData);
+        const response = await Axios.post("/users/auth/signup", userData);
         toast.success("Registration successful! Please verify your email.");
-        return response.data;
+        const data = response.data;
+        if (data.data.token) {
+            localStorage.setItem("token", data.data.token);
+            localStorage.setItem("user", JSON.stringify(data.data));
+            return data.data;
+        }
     } catch (error) {
         const message =
             error.response?.data?.message || "Registration failed. Please try again.";
@@ -75,7 +82,7 @@ export const resetPassword = async (token, newPassword) => {
 // Change password
 export const changePassword = async (passwordData) => {
     try {
-        const response = await Axios.post("/auth/change-password", passwordData);
+        const response = await Axios.post("/users/auth/change-password", passwordData);
         toast.success("Password changed successfully!");
         return response.data;
     } catch (error) {
@@ -93,6 +100,7 @@ export const logoutUser = () => {
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         toast.success("Logged out successfully");
+        window.location.reload();
     } catch (error) {
         toast.error("Logout failed. Please try again.");
         throw error;
@@ -118,10 +126,14 @@ export const isAuthenticated = () => {
 // Update user profile
 export const updateProfile = async (userData) => {
     try {
-        const response = await Axios.put("/auth/update-profile", userData);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+        const response = await Axios.put(
+            "/users/update/" + getCurrentUser()?._id,
+            userData
+        );
+        localStorage.setItem("user", JSON.stringify(response.data.data));
+        localStorage.setItem("cachedAddress", "");
         toast.success("Profile updated successfully!");
-        return response.data;
+        return response.data.data;
     } catch (error) {
         const message =
             error.response?.data?.message || "Profile update failed. Please try again.";
