@@ -97,8 +97,7 @@ export const changePassword = async (passwordData) => {
 // Logout user
 export const logoutUser = () => {
     try {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
+        localStorage.clear();
         toast.success("Logged out successfully");
         window.location.reload();
     } catch (error) {

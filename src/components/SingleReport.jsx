@@ -1,11 +1,13 @@
 
 import { BadgeAlert, Clock, MapPin, Phone, User } from 'lucide-react';
+// @ts-ignore
 import ReportDescriptions from './ReportDescriptions';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Axios from '../services/axios';
 import { getCurrentUser } from '../services/authService';
 import { toast } from 'sonner';
+import { Link } from 'react-router-dom';
 
 export default function SingleReport({
      data,
@@ -104,19 +106,19 @@ export default function SingleReport({
 
      return (
           <>
-               <div className="bg-white rounded-xl shadow-sm p-4 space-y-4">
+               <div className="bg-base-100 outline rounded-xl shadow-sm p-4 space-y-4">
                     {/* Emergency Type and Status */}
                     <div className="flex justify-between items-center">
                          <div className="flex items-center space-x-2">
                               <BadgeAlert className="w-5 h-5 text-red-500" />
                               <span className="font-semibold text-gray-800 capitalize">{emergencyType}</span>
                          </div>
-                         <div className={`px-3 py-1 rounded-full text-sm ${status === "occuring"
+                         {/* <div className={`px-3 py-1 rounded-full text-sm ${status === "occuring"
                               ? "bg-red-100 text-red-600"
                               : "bg-green-100 text-green-600"
                               }`}>
                               {status}
-                         </div>
+                         </div> */}
                     </div>
 
                     {/* Time and Location */}
@@ -154,16 +156,20 @@ export default function SingleReport({
                     </div>
 
                     {/* Action Button */}
-                    <button
-                         onClick={handleVolunteer}
-                         disabled={volLoading}
-                         className={`w-full py-2.5 rounded-lg font-medium transition-colors ${isVolunteered
-                              ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                              : "bg-red-500 text-white hover:bg-red-600"
-                              }`}
-                    >
-                         {volLoading ? "Loading..." : isVolunteered ? "Unvolunteer" : "Volunteer to Help"}
-                    </button>
+                    {data.user._id != getCurrentUser()._id ?
+                         <button
+                              onClick={handleVolunteer}
+                              disabled={volLoading}
+                              className={`w-full py-2.5 rounded-lg font-medium transition-colors ${isVolunteered
+                                   ? "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                   : "bg-red-500 text-white hover:bg-red-600"
+                                   }`}
+                         >
+                              {volLoading ? "Loading..." : isVolunteered ? "Unvolunteer" : "Volunteer to Help"}
+                         </button>
+                         :
+                         <Link to={"/sos/reports/track/" + data._id} className='btn btn-block btn-primary'>Track My Report</Link>
+                    }
                     {/* <label className="btn btn-block py-2.5 rounded-lg font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"> */}
                     <label htmlFor={"modal_desc_" + data._id} className="btn btn-base-100 btn-block  rounded-lg">
                          Details

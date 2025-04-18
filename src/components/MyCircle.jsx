@@ -4,10 +4,10 @@ import { useState, useEffect } from "react";
 
 export default function MyCircle({ contacts = [], size = 300 }) {
      const [hoveredContact, setHoveredContact] = useState(null);
-     const [counter, setCounter] = useState(0);
+     const [counter, setCounter] = useState(60);
      const [rotation, setRotation] = useState(0);
      const radius = size * 0.4; // Dynamic radius based on container size
-     const centerSize = size * 0.25; // Dynamic center circle size
+     const centerSize = size * 0.26; // Dynamic center circle size
 
      const demoContacts = [
           { id: 1, name: 'Emmy Jackson', role: 'Friend', angle: 0 },
@@ -26,7 +26,7 @@ export default function MyCircle({ contacts = [], size = 300 }) {
           }, 50);
 
           setInterval(() => {
-               setCounter(prev => prev + 1);
+               counter > 0 ? setCounter(prev => prev - 1) : setCounter(60);
           }, 1000);
 
           return () => clearInterval(interval);

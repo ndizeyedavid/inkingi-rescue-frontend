@@ -1,4 +1,7 @@
 import { Heart, MessageSquare, Phone } from "lucide-react";
+import Axios from "../services/axios";
+import { getCurrentUser } from "../services/authService";
+import { toast } from "sonner";
 
 export default function EmergencyContactCard({ contact }) {
 
@@ -6,9 +9,18 @@ export default function EmergencyContactCard({ contact }) {
           window.location.href = `tel:${phone}`;
      };
 
-     const handleSMS = (phone) => {
-          window.location.href = `sms:${phone}`;
-     };
+     const handleSMS = async (phone) => {
+          try {
+               await Axios.post("/contacts/send/msg/" + contact._id, {
+                    message: `${getCurrentUser().fname + " " + getCurrentUser().lname} needs your help. Please contact them at ${getCurrentUser().phone}`,
+               })
+
+               toast.success("Message sent successfully");
+          } catch (err) {
+               toast.error(err.response.data.message);
+               console.error(err);
+          };
+     }
 
      return (
           <div className="card bg-base-100 shadow-lg">

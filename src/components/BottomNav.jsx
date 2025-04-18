@@ -3,7 +3,7 @@ import { NavLink } from "react-router-dom";
 
 export default function BottomNav() {
      return (
-          <div className="dock dock-xl h-[85px] w-[90%] mx-auto rounded-2xl bg-[#f5f5fa] shadow-md border-t-0 mb-3 z-50">
+          <div className="dock dock-xl h-[84px] w-[90%] mx-auto rounded-2xl bg-base-100 outline shadow-md mb-3 z-50">
                <NavLink to="/" className={({ isActive }) => isActive ? "dock-active" : ""}>
                     <House size={30} />
                     <span className="text-[15px] mb-2">Home</span>
