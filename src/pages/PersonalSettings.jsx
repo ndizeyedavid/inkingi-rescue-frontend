@@ -63,9 +63,9 @@ function PersonalSettings() {
 
      return (
           <>
-               <div className='flex items-center justify-between px-3 py-7 pt-8 bg-[#f6f0e8] text-black'>
+               <div className='flex items-center justify-between px-3 py-7 pt-8 bg-base-200'>
                     <div className='flex gap-3'>
-                         <Link to="/profile" className='bg-white p-1 rounded-full'>
+                         <Link to="/profile" className='bg-base-100 p-1 rounded-full'>
                               <ChevronLeft />
                          </Link>
                          <h3 className="text-[20px] font-medium">Personal Information</h3>

@@ -34,7 +34,7 @@ export default function SosContainer({ activeEmergencies }) {
 
      return (
           <div className='mt-[30px] p-3 h-[406px]'>
-               <div className='w-full h-full shadow-lg bg-[#f5f5fa] rounded-3xl flex items-center justify-center'>
+               <div className='w-full h-full shadow-lg bg-base-200 rounded-3xl flex items-center justify-center'>
                     <div className='relative w-[290px] h-[290px] rounded-full bg-white shadow-[inset_2px_2px_10px_rgba(0,0,0,0.2),_inset_-2px_-2px_10px_rgba(255,255,255,0.2)]
                          flex items-center justify-center'>
                          <div className='absolute w-full h-full rounded-full shadow-[inset_-2px_-2px_10px_rgba(0,0,0,0.2),_inset_2px_2px_10px_rgba(255,255,255,0.3)]'

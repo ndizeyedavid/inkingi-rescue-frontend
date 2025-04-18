@@ -33,14 +33,14 @@ function Profile() {
      return (
           <div className="pb-24">
                {/* Header */}
-               <div className="bg-gray-50 p-6 h-[150px] flex items-center justify-between rounded-[0_0_30px_30px] shadow">
+               <div className="bg-base-100 p-6 h-[150px] flex items-center justify-between rounded-[0_0_30px_30px] shadow">
                     <div className="flex items-center space-x-2">
-                         <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center">
-                              <UserCircleIcon className="w-12 h-12 text-gray-400" />
+                         <div className="w-20 h-20 rounded-full bg-base-300 flex items-center justify-center">
+                              <UserCircleIcon className="w-12 h-12 t" />
                          </div>
                          <div>
                               <h2 className="text-xl font-semibold">{userInfo?.fname + " " + userInfo?.lname}</h2>
-                              <p className="text-gray-500">{userInfo?.phone}</p>
+                              <p className="">{userInfo?.phone}</p>
                          </div>
                     </div>
                     <button onClick={handleLogout} className="flex items-center btn btn-outline btn-danger">
@@ -59,13 +59,13 @@ function Profile() {
                                         <Link
                                              to={setting.link}
                                              key={idx}
-                                             className="w-full flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:bg-gray-50 transition-colors"
+                                             className="w-full flex items-center justify-between p-4 bg-base-100 outline rounded-xl shadow-sm hover:bg-base-200 transition-colors"
                                         >
                                              <div className="flex items-center space-x-3">
                                                   <div className="text-gray-600">
                                                        {setting.icon}
                                                   </div>
-                                                  <span className="text-gray-700">{setting.name}</span>
+                                                  <span className="">{setting.name}</span>
                                              </div>
                                              <ChevronRightIcon className="w-5 h-5 text-gray-400" />
                                         </Link>
