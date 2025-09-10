@@ -24,7 +24,7 @@ function Home() {
 
                <div className="grid grid-cols-2 p-3 mt-[30px] items-center">
                     <div className="space-y-[10px]">
-                         <h3 className="text-3xl font-semibold">Are you in an emergency?</h3>
+                         <h3 className="text-2xl font-semibold">Are you in an emergency?</h3>
                          <p className="text-[17px]">Press the SOS button, your live location will be shared wih the nearest help centre and your emergency contacts  </p>
                     </div>
                     <div>

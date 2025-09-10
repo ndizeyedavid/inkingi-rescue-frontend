@@ -1,4 +1,4 @@
-import { ChevronLeft, Send } from "lucide-react"
+import { ChevronLeft, Send, MessageSquare } from "lucide-react"
 import { Link } from "react-router-dom"
 import { useState, useEffect, useRef } from "react"
 import { useForm } from "react-hook-form";
@@ -7,7 +7,11 @@ import promptAi from "../robot/gemini";
 import { motion, AnimatePresence } from "framer-motion";
 
 function Ai() {
-     const [messages, setMessages] = useState([]);
+     // Load messages from localStorage on component mount
+     const [messages, setMessages] = useState(() => {
+          const savedMessages = localStorage.getItem('aiChatMessages');
+          return savedMessages ? JSON.parse(savedMessages) : [];
+     });
      const [loading, setLoading] = useState(false);
      const messagesEndRef = useRef(null);
 
@@ -15,7 +19,9 @@ function Ai() {
           messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
      };
 
+     // Save messages to localStorage whenever they change
      useEffect(() => {
+          localStorage.setItem('aiChatMessages', JSON.stringify(messages));
           scrollToBottom();
      }, [messages]);
 
@@ -47,6 +53,15 @@ function Ai() {
           }
      }
 
+     // Function to clear chat history
+     const clearChat = () => {
+          if (window.confirm("Are you sure you want to clear the chat history?")) {
+               setMessages([]);
+               localStorage.removeItem('aiChatMessages');
+               toast.success("Chat history cleared");
+          }
+     };
+
      return (
           <>
                <div className='flex items-center justify-between px-3 py-7 pt-8 bg-base-200'>
@@ -56,46 +71,69 @@ function Ai() {
                          </Link>
                          <h3 className="text-[20px] font-medium">INKINGI Ai</h3>
                     </div>
+                    {messages.length > 0 && (
+                         <button
+                              onClick={clearChat}
+                              className="btn btn-sm btn-ghost"
+                              title="Clear chat history"
+                         >
+                              Clear
+                         </button>
+                    )}
                </div>
 
                <div className="flex flex-col h-[calc(100vh-95px)]">
                     {/* Chat messages */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                         <AnimatePresence>
-                              {messages.map((message, index) => (
-                                   <motion.div
-                                        key={index}
-                                        initial={{
-                                             opacity: 0,
-                                             y: 20,
-                                             scale: 0.8
-                                        }}
-                                        animate={{
-                                             opacity: 1,
-                                             y: 0,
-                                             scale: 1
-                                        }}
-                                        transition={{
-                                             duration: 0.3,
-                                             type: "spring",
-                                             stiffness: 260,
-                                             damping: 20
-                                        }}
-                                        className={`chat ${message.role === 'user' ? 'chat-end' : 'chat-start'}`}
-                                   >
+                         {messages.length === 0 ? (
+                              <motion.div
+                                   initial={{ opacity: 0 }}
+                                   animate={{ opacity: 1 }}
+                                   className="flex flex-col items-center justify-center h-full text-center p-4"
+                              >
+                                   <MessageSquare size={64} className="text-primary opacity-20 mb-4" />
+                                   <h3 className="text-xl font-medium mb-2">Welcome to INKINGI AI</h3>
+                                   <p className="text-base-content/70 max-w-md">
+                                        Ask me anything about emergency services, first aid, or how to use INKINGI Rescue features.
+                                   </p>
+                              </motion.div>
+                         ) : (
+                              <AnimatePresence>
+                                   {messages.map((message, index) => (
                                         <motion.div
-                                             initial={{ scale: 0.5 }}
-                                             animate={{ scale: 1 }}
-                                             transition={{ duration: 0.2 }}
-                                             className={`chat-bubble ${message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary'}`}
+                                             key={index}
+                                             initial={{
+                                                  opacity: 0,
+                                                  y: 20,
+                                                  scale: 0.8
+                                             }}
+                                             animate={{
+                                                  opacity: 1,
+                                                  y: 0,
+                                                  scale: 1
+                                             }}
+                                             transition={{
+                                                  duration: 0.3,
+                                                  type: "spring",
+                                                  stiffness: 260,
+                                                  damping: 20
+                                             }}
+                                             className={`chat ${message.role === 'user' ? 'chat-end' : 'chat-start'}`}
                                         >
-                                             {message.content}
+                                             <motion.div
+                                                  initial={{ scale: 0.5 }}
+                                                  animate={{ scale: 1 }}
+                                                  transition={{ duration: 0.2 }}
+                                                  className={`chat-bubble ${message.role === 'user' ? 'chat-bubble-primary' : 'chat-bubble-secondary'}`}
+                                             >
+                                                  {message.content}
+                                             </motion.div>
                                         </motion.div>
-                                   </motion.div>
-                              ))}
+                                   ))}
 
-                              {loading && (<div className="chat chat-start"><div className="chat-bubble chat-bubble-secondary" ><span className="loading loading-spinner"></span></div></div>)}
-                         </AnimatePresence>
+                                   {loading && (<div className="chat chat-start"><div className="chat-bubble chat-bubble-secondary" ><span className="loading loading-spinner"></span></div></div>)}
+                              </AnimatePresence>
+                         )}
                          <div ref={messagesEndRef} />
                     </div>
 
@@ -107,13 +145,14 @@ function Ai() {
                                    placeholder="Type your message..."
                                    className="input input-bordered join-item w-full"
                                    disabled={loading}
-                                   {...register("message")}
+                                   {...register("message", { required: true })}
                               />
                               <motion.button
                                    type="submit"
                                    className="btn join-item btn-primary"
                                    whileTap={{ scale: 0.95 }}
                                    whileHover={{ scale: 1.05 }}
+                                   disabled={loading}
                               >
                                    {loading ? <span className="loading loading-spinner"></span> : <Send size={20} />}
                               </motion.button>
