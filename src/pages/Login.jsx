@@ -27,6 +27,12 @@ function Login() {
 
      return (
           <main className="h-screen w-full flex items-center justify-center">
+               <div className="lg:block absolute top-0 hidden text-center w-full p-4 bg-orange-100 text-orange-800 mb-8">
+                    This website is optimized for mobile viewing.
+                    <a href="/frame" className="ml-2 text-orange-600 underline">
+                         Switch to mobile view
+                    </a>
+               </div>
                <div className="flex flex-col gap-[40px] w-[86%] mx-auto">
                     <div className="flex justify-center">
                          <img src="/assets/logo/logo-no-bg.png" className="object-contain" width={300} height={300} alt="Logo" />
